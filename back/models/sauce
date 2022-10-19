@@ -1,13 +1,23 @@
+// Shéma des Sauces = utilisation de mongoose pour créer le shémo, donc importation de mongoose
 const mongoose = require("mongoose");
 
+// Shéma de données , Fonction .Shema mise a dispo par le package mongoose
 const sauceSchema = mongoose.Schema({
+    // Clé = Nom du champs & Objet pour config la clé =Type
     userId: { type: String, required: true },
     name: { type: String, required: true },
     manufacturer: { type: String, required: true },
     description: { type: String, required: true },
-    imageUrl: { type: String, required: true },
     mainPepper: { type: String, required: true },
+    imageUrl: { type: String, required: true },
     heat: { type: Number, required: true },
+    likes: { type: Number },
+    dislikes: { type: Number },
+    usersLiked: { type: [String] },
+    usersDisliked: {
+        type: [String],
+    },
 });
 
+// Export du modèl pour pouvoir l'utiliser ("Nom du modèle", Shéma qu'on veut utiliser)
 module.exports = mongoose.model("Sauce", sauceSchema);
