@@ -1,6 +1,7 @@
 // Récupération du modèle Sauce
 const Sauce = require("../models/Sauce");
-// donne accès aux fonctions qui nous permettent de modifier le système de fichiers, y compris aux fonctions permettant de supprimer les fichiers.
+// donne accès aux fonctions qui nous permettent de modifier le système de fichiers,
+// y compris aux fonctions permettant de supprimer les fichiers.
 const fs = require("fs");
 
 exports.getAllSauces = (req, res, next) => {
@@ -20,6 +21,7 @@ exports.createSauce = (req, res, next) => {
     // Opérateur spread ... (raccourcie = copier les champs qu'il y a dans le corp de la requête (req.bod.sauce) )
     ...sauceObject,
     userId: req.auth.userId,
+    // Modification de l'URL
     imageUrl: `${req.protocol}://${req.get("host")}/images/${
       req.file.filename
     }`,
@@ -29,14 +31,18 @@ exports.createSauce = (req, res, next) => {
     usersDisliked: [],
   });
   sauce
+    //   Permet de sauvegarder dans la base de donnée la sauce
     .save()
+    // Réponse statut 201
     .then(() => {
       res.status(201).json({ message: "Sauce posté!" });
     })
+    // Sinon erreur
     .catch((error) => {
       res.status(400).json({ error: error });
     });
 };
+// modification de la sauce
 exports.modifySauce = (req, res, next) => {
   const sauceObject = req.file
     ? {
@@ -46,7 +52,7 @@ exports.modifySauce = (req, res, next) => {
         }`,
       }
     : { ...req.body };
-  // delete sauceObject._userId ????  OU userId ???;
+
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId != req.auth.userId) {
@@ -63,9 +69,11 @@ exports.modifySauce = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+// Suppression de la sauce
 exports.deleteSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
+      // Si le user Id de la sauce différent de l'user ID connecté
       if (sauce.userId != req.auth.userId) {
         res.status(401).json({ message: "Not authorized" });
       } else {
