@@ -1,10 +1,13 @@
+// Controllers = logiqUE Métier qui est appliqué à chaque route
 // Récupération du modèle Sauce
 const Sauce = require("../models/Sauce");
-// donne accès aux fonctions qui nous permettent de modifier le système de fichiers,
+// Module fs ( file system) livré avec node.js
+//  Donne accès aux fonctions qui nous permettent de modifier le système de fichiers,
 // y compris aux fonctions permettant de supprimer les fichiers.
 const fs = require("fs");
 
 exports.getAllSauces = (req, res, next) => {
+  // Méthode find() renvoi un tableau de toute les sauces
   Sauce.find()
     .then((sauces) => res.status(200).json(sauces))
     .catch((error) => res.status(400).json({ error }));
@@ -12,16 +15,19 @@ exports.getAllSauces = (req, res, next) => {
 // Création d'une nouvelle sauce
 exports.createSauce = (req, res, next) => {
   console.log("creation de sauce reussi");
+  // parser objet requête, car envoyer en json.chaine de caractere donc doit être parser
   const sauceObject = JSON.parse(req.body.sauce);
   console.log(req.body);
   // Id générer automatiquement par MangoDB donc supp
   delete sauceObject._id;
-  // delete sauceObject._userId ???? OU .userId ???;
+  delete sauceObject._userId;
+  // "new" avec un modèle Mongoose crée par défaut un champ_id
   const sauce = new Sauce({
     // Opérateur spread ... (raccourcie = copier les champs qu'il y a dans le corp de la requête (req.bod.sauce) )
     ...sauceObject,
     userId: req.auth.userId,
-    // Modification de l'URL
+    // Générer l'URL de l'image ( car multer ne passe que le nom de fichier)
+    // Appel aux propriété de l'objet requête : protocole://le nom d'hôte et le nom de fichier tel qu'il nous ai donné par multer
     imageUrl: `${req.protocol}://${req.get("host")}/images/${
       req.file.filename
     }`,
@@ -31,37 +37,55 @@ exports.createSauce = (req, res, next) => {
     usersDisliked: [],
   });
   sauce
-    //   Permet de sauvegarder dans la base de donnée la sauce
+    //   enregistre dans la base de donnée "sauce" et renvoi une Promise
     .save()
-    // Réponse statut 201
+    // renvoi de rep reussi
     .then(() => {
+      // 201 nouvelle ressource a été créée
       res.status(201).json({ message: "Sauce posté!" });
     })
-    // Sinon erreur
+    // renvoi de rep avec l'erreur générée par Mongoose
     .catch((error) => {
+      //400- Erreur client
       res.status(400).json({ error: error });
     });
 };
-// modification de la sauce
+// modification de la sauce :
+// Subtilité : Si l'utilisateur a transmis une image ou pas, le format de la requete ne sera pas le même
+// Lorsqu'il y a un fichier de transmis, nous obtenons notre objet sous la forme de chaîne de caractère
+// mais ce n'est pas le cas, quand il n'y a pas de fichier de transmis
 exports.modifySauce = (req, res, next) => {
+  // regarder s'il y a un champ file dans notre objet requete
   const sauceObject = req.file
     ? {
+        // si il y un champ file alors parse lka chaine de caractère et recréant l'url de l'image
         ...JSON.parse(req.body.sauce),
+        //req.file.filename ne contient que le segment filename. Nous utilisons req.protocol
+        //  pour obtenir le premier segment (dans notre cas 'http'). Nous ajoutons '://', puis utilisons req.get('host')
+        //  pour résoudre l'hôte du serveur (ici, 'localhost:3000').
+        // Nous ajoutons finalement '/images/' et le nom de fichier pour compléter notre URL
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
         }`,
       }
-    : { ...req.body };
-
+    : // s'il n'y a pàas d'objet transmis,nous récupérons simplement l'ojet directement dans le cors de la requête
+      { ...req.body };
+  delete sauceObject._userId;
+  // methode findOne() pour trouver une sauce ayant le même _id que le paramètre de la requête
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId != req.auth.userId) {
+        // error 401 : non autorisé
         res.status(401).json({ message: "Non-autorisé" });
       } else {
         Sauce.updateOne(
+          // 1 argument : objet de comparaison (id = id envoyé dans les paramètre de requête)
+          //   2 argument : Nouvelle version de l'objet (spread) qui à l'id qui correspond à celui dans le corp de la requete
           { _id: req.params.id },
           { ...sauceObject, _id: req.params.id }
         )
+          // Promises
+          //   200  requête a réussi
           .then(() => res.statut(200).json({ message: "Sauce modifié" }))
           .catch((error) => res.status(401).json({ error }));
       }
@@ -71,39 +95,57 @@ exports.modifySauce = (req, res, next) => {
 
 // Suppression de la sauce
 exports.deleteSauce = (req, res, next) => {
+  // methode findOne() pour trouver une sauce ayant le même _id que le paramètre de la requête
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       // Si le user Id de la sauce différent de l'user ID connecté
       if (sauce.userId != req.auth.userId) {
+        // 401 non autorisé
         res.status(401).json({ message: "Not authorized" });
       } else {
+        // recupérer l'url enregistrer et recréer le chemin sur notre système de fichier à partir de celle-ci
+        // split() autour du répertoire image puisque le nom du fichier se trouve après
         const filename = sauce.imageUrl.split("/images/")[1];
-        // methode .unlink() permet de supprimer un fichier du système de fichiers.
+        // methode .unlink() de fs permet de supprimer un fichier du système de fichiers.
         fs.unlink(`images/${filename}`, () => {
+          // Méthode deleteOne() = un objet correspondant au document à supprimer
           Sauce.deleteOne({ _id: req.params.id })
             .then(() => {
+              //  200 requête a réussi
               res.status(200).json({ message: "Objet supprimé !" });
             })
-            .catch((error) => res.status(401).json({ error }));
+            // 400 mauvaise requête
+            .catch((error) => res.status(400).json({ error }));
         });
       }
     })
     .catch((error) => {
+      //400 Le serveur a rencontré une situation qu'il ne sait pas traiter
       res.status(500).json({ error });
     });
 };
 exports.getOneSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => res.status(200).json(sauce))
+    // 404 : erreur not found => erreur client
     .catch((error) => res.status(404).json({ error }));
 };
 
+// like et dislike la sauce
+
 exports.likeDislikeSauce = (req, res, next) => {
+  // recupération du like
   let like = req.body.like;
+  // Trouve la sauce sur laquelle ont veut modifier le like
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
+      // Instructionb switch ...case = selection à n branche
+      // switch (expression (entier ou type chaine))
       switch (like) {
+        // case (1 :constante ( ne peuvent pas avoir la même valeur))
+        // case 1, 0,-1 => ordre logique de cas qui se produit le plus souvent au moins
         case 1:
+          // instruction à executer si like === 1
           Sauce.updateOne(
             { _id: sauce.id },
             {
@@ -116,6 +158,7 @@ exports.likeDislikeSauce = (req, res, next) => {
             )
             .catch((error) => res.status(400).json({ error }));
           console.log(" Positif pris en compte");
+          // break : instruction de saut qui transfère le contrôle à la fin du switch
           break;
         case 0:
           if (sauce.usersLiked.includes(req.body.userId)) {
@@ -169,6 +212,7 @@ exports.likeDislikeSauce = (req, res, next) => {
             .then(() =>
               res.status(200).json({ message: "Vous avez disliké cette sauce" })
             )
+            // 400:Erreur client
             .catch((error) => res.status(400).json({ error }));
           console.log(" Négatif pris en compte");
           break;
@@ -179,6 +223,7 @@ exports.likeDislikeSauce = (req, res, next) => {
     })
     .catch((error) => {
       console.log(error);
+      //   500 : erreur serveur
       res.status(500).json({ error });
     });
 };
