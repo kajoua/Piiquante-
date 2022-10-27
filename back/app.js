@@ -8,12 +8,17 @@ const path = require("path");
 // Importation de nos routes
 const userRoutes = require("./routes/user");
 const sauceRoutes = require("./routes/sauce");
+
+//  installation du package dotenv npm install dotenv --save
+// importation de dotenv
+require("dotenv").config();
 // logique connection Api à notre base de données MongoDB
+
 mongoose
-  .connect(
-    "mongodb+srv://ygkajoua:monmotdepassemongoDB@cluster0.izflxax.mongodb.net/?retryWrites=true&w=majority",
-    { useNewUrlParser: true, useUnifiedTopology: true }
-  )
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Connexion à MongoDB réussie !"))
   .catch(() => console.log("Connexion à MongoDB échouée !"));
 const app = express();
