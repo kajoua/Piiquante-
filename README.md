@@ -20,10 +20,14 @@ npm run start
 
 Dans un autre terminal : http://localhost:3000
 
+Copiez le fichier .env-example vers .env et remplissez-le avec vos informations d'identification
+
 Lancer le backend:
 
 cd back
 
 node server
+
+
 
 
