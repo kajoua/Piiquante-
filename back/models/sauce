@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const sauceSchema = mongoose.Schema({
   // ID : généré automatiquement par Mongoose
   // Clé = Nom du champs & Objet pour config la clé =Type
-//   required True = Champ obligatoire pour validé 
+  //   required True = Champ obligatoire pour validé
   userId: { type: String, required: true },
   name: { type: String, required: true },
   manufacturer: { type: String, required: true },

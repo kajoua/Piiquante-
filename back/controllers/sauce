@@ -1,6 +1,7 @@
 // Controllers = logiqUE Métier qui est appliqué à chaque route
 // Récupération du modèle Sauce
 const Sauce = require("../models/Sauce");
+// const cookieParser = require("cookie-parser");
 // Module fs ( file system) livré avec node.js
 //  Donne accès aux fonctions qui nous permettent de modifier le système de fichiers,
 // y compris aux fonctions permettant de supprimer les fichiers.
@@ -11,9 +12,11 @@ exports.getAllSauces = (req, res, next) => {
   Sauce.find()
     .then((sauces) => res.status(200).json(sauces))
     .catch((error) => res.status(400).json({ error }));
+
 };
 // Création d'une nouvelle sauce
 exports.createSauce = (req, res, next) => {
+ 
   console.log("creation de sauce reussi");
   // parser objet requête, car envoyer en json.chaine de caractere donc doit être parser
   const sauceObject = JSON.parse(req.body.sauce);
