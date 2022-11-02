@@ -9,28 +9,36 @@ const User = require("../models/user");
 
 // Création utilisateur
 exports.signup = (req, res, next) => {
-  // hachage du mdp avec cla fonction hash() de bcrypt => Fonction asynchrone donc en premier
-  bcrypt
-    //   .hash(mot du corp de la requête, cb de fois on execute l'algorithme de hachage ( 10 tour) si ++ = met + de tps)
-    .hash(req.body.password, 10)
-    // Asynchrone donc then/catch
-    // Recupération hash de mdp => enregistrer dans un nouveau user dans la base de donnée
-    .then((hash) => {
-      // new création d'un nouveau ID
-      const user = new User({
-        email: req.body.email,
-        password: hash,
-      });
-      user
-        //   méthode save() enregistrer base de données
-        .save()
-        // réponse then 201 (nouvelle ressource a été créée) /catch
-        .then(() => res.status(201).json({ message: "Utlisateur crée!" }))
-        // error 400 : Erreur client
-        .catch((error) => res.status(400).json({ error: error }));
-    })
-    //  erreur 500 : error serveur
-    .catch((error) => res.status(500).json({ error }));
+  User.findOne({ email: req.body.email })
+    // Promise ( récupérer l'enregistrement dans la base de donnée)
+    .then((user) => {
+      if (user != null) {
+        return res.status(401).json({ message: "L'utilisateur existe déjà" });
+      } else {
+        // hachage du mdp avec cla fonction hash() de bcrypt => Fonction asynchrone donc en premier
+        bcrypt
+          //   .hash(mot du corp de la requête, cb de fois on execute l'algorithme de hachage ( 10 tour) si ++ = met + de tps)
+          .hash(req.body.password, 10)
+          // Asynchrone donc then/catch
+          // Recupération hash de mdp => enregistrer dans un nouveau user dans la base de donnée
+          .then((hash) => {
+            // new création d'un nouveau ID
+            const user = new User({
+              email: req.body.email,
+              password: hash,
+            });
+            user
+              //   méthode save() enregistrer base de données
+              .save()
+              // réponse then 201 (nouvelle ressource a été créée) /catch
+              .then(() => res.status(201).json({ message: "Utlisateur crée!" }))
+              // error 400 : Erreur client
+              .catch((error) => res.status(400).json({ error: error }));
+          })
+          //  erreur 500 : error serveur
+          .catch((error) => res.status(500).json({ error }));
+      }
+    });
 };
 
 // Vérification utilisateur
