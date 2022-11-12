@@ -92,6 +92,6 @@ app.use("/api/sauces", sauceRoutes);
 // récupération du répertoire dans lequel s'execute notre serveur (path.join())
 // et y concaténer le repertoire images
 // __dirname est une variable d'environnement qui vous indique le chemin absolu du répertoire contenant le fichier en cours d'exécution
-//app.use("images", express.static(path.join(__dirname, "images")));
+// app.use("images", express.static(path.join(__dirname, "images")));
 app.use(express.static("public"));
 module.exports = app;

@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
   // fontion destination() qui  va expliquer à multer dans quel dossier enregistrer les fichiers,3 arguments (req.file.callback)
   destination: (req, file, callback) => {
     // appelé le callback ( null (= pas eu d'erreur), "images" (=nom du dossier))
-    callback(null, "images");
+    callback(null, "public/images");
   },
   // fonction  filename() , explique à multer quel nom de fichier à utiliser
   filename: (req, file, callback) => {
