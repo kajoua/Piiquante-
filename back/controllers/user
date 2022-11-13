@@ -1,3 +1,5 @@
+require("dotenv").config();
+const validator = require("validator");
 // package de cryptage pour les mdp : npm install bcrypt
 // importation du package
 const bcrypt = require("bcrypt");
@@ -9,6 +11,11 @@ const User = require("../models/user");
 
 // Création utilisateur
 exports.signup = (req, res, next) => {
+  if (!validator.isStrongPassword(req.body.password))
+    return res.status(400).json({
+      message:
+        "Doit contenir au moins 8 caractères, 1 majuscule, 1 minuscule, 1 symbole, 1 chiffre",
+    });
   User.findOne({ email: req.body.email })
     // Promise ( récupérer l'enregistrement dans la base de donnée)
     .then((user) => {
@@ -79,9 +86,13 @@ exports.login = (req, res, next) => {
                 //2 arguement ( clé secrète pour l'encodage, "RANDOM_TOKEN_SECRET")
                 // 3 arguement ( argument de configuration = elment d'expiration de notre token)
                 // console => reseau => regardé sur la dernière requete =>headers =>Request headers => authorization => contient une chaine de caractère
-                token: jwt.sign({ userId: user._id }, "RANDOM_TOKEN_SECRET", {
-                  expiresIn: "24h",
-                }),
+                token: jwt.sign(
+                  { userId: user._id },
+                  process.env.TOKEN_SECRET,
+                  {
+                    expiresIn: "24h",
+                  }
+                ),
               });
             }
           })

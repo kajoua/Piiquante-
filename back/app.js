@@ -1,8 +1,6 @@
 // Express : un framework qui facilite la création et la gestion des serveurs Node
 // Package.json: les détails de tous les packages npm que nous utiliserons
 const express = require("express");
-
-const bodyParser = require("body-parser");
 // importation de mongoose
 const mongoose = require("mongoose");
 const path = require("path");
@@ -71,7 +69,7 @@ app.use(
   })
 );
 app.disable("x-powered-by");
-app.use(bodyParser.json());
+
 app.use(hpp());
 app.use(express.json());
 // app.use(express_enforces_ssl());
@@ -92,6 +90,6 @@ app.use("/api/sauces", sauceRoutes);
 // récupération du répertoire dans lequel s'execute notre serveur (path.join())
 // et y concaténer le repertoire images
 // __dirname est une variable d'environnement qui vous indique le chemin absolu du répertoire contenant le fichier en cours d'exécution
-// app.use("images", express.static(path.join(__dirname, "images")));
+// app.use("/public/images", express.static(path.join(__dirname, "images")));
 app.use(express.static("public"));
 module.exports = app;

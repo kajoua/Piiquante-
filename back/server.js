@@ -1,5 +1,5 @@
 // Importation du package HTTP natif de Node
-//
+require("dotenv").config();
 const http = require("http");
 const app = require("./app");
 
@@ -16,7 +16,7 @@ const normalizePort = (val) => {
 };
 // Configuration du serveur pour qu'il écoute la variable d'environnement du port
 // fonction normalizePort renvoie un port valide
-const port = normalizePort(process.env.PORT || "3000");
+const port = normalizePort(process.env.PORT);
 app.set("port", port);
 // fonction errorHandler  recherche les différentes erreurs et les gère de manière appropriée
 const errorHandler = (error) => {

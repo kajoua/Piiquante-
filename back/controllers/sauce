@@ -21,7 +21,6 @@ exports.createSauce = (req, res, next) => {
   console.log(req.body);
   // Id générer automatiquement par MangoDB donc supp
   delete sauceObject._id;
-  delete sauceObject._userId;
   // "new" avec un modèle Mongoose crée par défaut un champ_id
   const sauce = new Sauce({
     // Opérateur spread ... (raccourcie = copier les champs qu'il y a dans le corp de la requête (req.bod.sauce) )
@@ -59,7 +58,7 @@ exports.modifySauce = (req, res, next) => {
   // regarder s'il y a un champ file dans notre objet requete
   const sauceObject = req.file
     ? {
-        // si il y un champ file alors parse lka chaine de caractère et recréant l'url de l'image
+        // si il y un champ file alors parse la chaine de caractère et recréant l'url de l'image
         ...JSON.parse(req.body.sauce),
         //req.file.filename ne contient que le segment filename. Nous utilisons req.protocol
         //  pour obtenir le premier segment (dans notre cas 'http'). Nous ajoutons '://', puis utilisons req.get('host')
@@ -69,9 +68,9 @@ exports.modifySauce = (req, res, next) => {
           req.file.filename
         }`,
       }
-    : // s'il n'y a pàas d'objet transmis,nous récupérons simplement l'ojet directement dans le cors de la requête
+    : // s'il n'y a pas d'objet transmis,nous récupérons simplement l'ojet directement dans le cors de la requête
       { ...req.body };
-  delete sauceObject._userId;
+
   // methode findOne() pour trouver une sauce ayant le même _id que le paramètre de la requête
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
@@ -79,6 +78,10 @@ exports.modifySauce = (req, res, next) => {
         // error 401 : non autorisé
         res.status(401).json({ message: "Non-autorisé" });
       } else {
+        const filename = sauce.imageUrl.split("/images/")[1];
+        if (req.file.filename != filename) {
+        }
+        fs.unlink(`./public/images/${filename}`, () => {});
         Sauce.updateOne(
           // 1 argument : objet de comparaison (id = id envoyé dans les paramètre de requête)
           //   2 argument : Nouvelle version de l'objet (spread) qui à l'id qui correspond à celui dans le corp de la requete
@@ -108,7 +111,7 @@ exports.deleteSauce = (req, res, next) => {
         // split() autour du répertoire image puisque le nom du fichier se trouve après
         const filename = sauce.imageUrl.split("/images/")[1];
         // methode .unlink() de fs permet de supprimer un fichier du système de fichiers.
-        fs.unlink(`public/${filename}`, () => {
+        fs.unlink(`./public/images/${filename}`, () => {
           // Méthode deleteOne() = un objet correspondant au document à supprimer
           Sauce.deleteOne({ _id: req.params.id })
             .then(() => {
