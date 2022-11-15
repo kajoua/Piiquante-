@@ -3,7 +3,6 @@
 const express = require("express");
 // importation de mongoose
 const mongoose = require("mongoose");
-const path = require("path");
 // // middleware va intercepter toutes les requêtes faites sur le port HTTP
 // //  et va renvoyer avec la réponse « HTTP 301 Moved Permanently » vers l’url en HTTPS
 // const express_enforces_ssl = require("express-enforces-ssl");
