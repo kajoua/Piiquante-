@@ -46,7 +46,6 @@ exports.createSauce = (req, res, next) => {
     })
     // renvoi de rep avec l'erreur générée par Mongoose
     .catch((error) => {
-      //400- Erreur client
       res.status(400).json({ error: error });
     });
 };
@@ -58,40 +57,30 @@ exports.modifySauce = (req, res, next) => {
   // regarder s'il y a un champ file dans notre objet requete
   const sauceObject = req.file
     ? {
-        // si il y un champ file alors parse la chaine de caractère et recréant l'url de l'image
         ...JSON.parse(req.body.sauce),
-        //req.file.filename ne contient que le segment filename. Nous utilisons req.protocol
-        //  pour obtenir le premier segment (dans notre cas 'http'). Nous ajoutons '://', puis utilisons req.get('host')
-        //  pour résoudre l'hôte du serveur (ici, 'localhost:3000').
-        // Nous ajoutons finalement '/images/' et le nom de fichier pour compléter notre URL
         imageUrl: `${req.protocol}://${req.get("host")}/images/${
           req.file.filename
         }`,
       }
-    : // s'il n'y a pas d'objet transmis,nous récupérons simplement l'ojet directement dans le cors de la requête
-      { ...req.body };
-
-  // methode findOne() pour trouver une sauce ayant le même _id que le paramètre de la requête
+    : { ...req.body };
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId != req.auth.userId) {
-        // error 401 : non autorisé
         res.status(401).json({ message: "Non-autorisé" });
       } else {
         const filename = sauce.imageUrl.split("/images/")[1];
         if (req.file.filename != filename) {
+          fs.unlink(`./public/images/${filename}`, () => {});
         }
-        fs.unlink(`./public/images/${filename}`, () => {});
         Sauce.updateOne(
-          // 1 argument : objet de comparaison (id = id envoyé dans les paramètre de requête)
-          //   2 argument : Nouvelle version de l'objet (spread) qui à l'id qui correspond à celui dans le corp de la requete
           { _id: req.params.id },
           { ...sauceObject, _id: req.params.id }
         )
-          // Promises
-          //   200  requête a réussi
-          .then(() => res.statut(200).json({ message: "Sauce modifié" }))
-          .catch((error) => res.status(401).json({ error }));
+          .then(() => res.status(200).json({ message: "Sauce modifié" }))
+          .catch((error) => {
+            console.log(error);
+            res.status(401).json({ error });
+          });
       }
     })
     .catch((error) => res.status(400).json({ error }));

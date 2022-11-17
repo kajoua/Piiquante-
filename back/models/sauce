@@ -1,11 +1,12 @@
 // Shéma des Sauces = utilisation de mongoose
 // pour créer le shémo, donc importation de mongoose
 const mongoose = require("mongoose");
-
+const mongodbErrorHandler = require("mongoose-mongodb-errors");
 // Shéma de données ,
 // Fonction .Shema mise a dispo par le package mongoose
+mongoose.plugin(mongodbErrorHandler);
 
-const sauceSchema = mongoose.Schema({
+const sauceSchema = new mongoose.Schema({
   // ID : généré automatiquement par Mongoose
   // Clé = Nom du champs & Objet pour config la clé =Type
   //   required True = Champ obligatoire pour validé
@@ -23,7 +24,7 @@ const sauceSchema = mongoose.Schema({
     type: [String],
   },
 });
-
+sauceSchema.plugin(mongodbErrorHandler);
 // Export du modèl pour pouvoir l'utiliser
 // ("Nom du modèle", Shéma qu'on veut utiliser)
 // Méthode model => transforme en modèle utilisable

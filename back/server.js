@@ -1,7 +1,7 @@
 // Importation du package HTTP natif de Node
-require("dotenv").config();
 const http = require("http");
 const app = require("./app");
+require("dotenv").config();
 
 const normalizePort = (val) => {
   const port = parseInt(val, 10);
