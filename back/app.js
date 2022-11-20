@@ -8,8 +8,7 @@ const mongodbErrorHandler = require("mongoose-mongodb-errors");
 // //  et va renvoyer avec la réponse « HTTP 301 Moved Permanently » vers l’url en HTTPS
 // const express_enforces_ssl = require("express-enforces-ssl");
 const helmet = require("helmet");
-//  HPP Pas nécessaire ici car =
-const hpp = require("hpp");
+
 // Importation de nos routes
 const userRoutes = require("./routes/user");
 const sauceRoutes = require("./routes/sauce");
@@ -50,7 +49,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(hpp());
 app.use(express.json());
 // app.use(express_enforces_ssl());
 // Utilisation du début de la route + routeur qui utilise ce début de route
