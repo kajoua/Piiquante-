@@ -54,37 +54,45 @@ exports.createSauce = (req, res, next) => {
 // Lorsqu'il y a un fichier de transmis, nous obtenons notre objet sous la forme de chaîne de caractère
 // mais ce n'est pas le cas, quand il n'y a pas de fichier de transmis
 exports.modifySauce = (req, res, next) => {
+  const sauceObject = req.file
+    ? {
+        ...JSON.parse(req.body.sauce),
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+      }
+    : { ...req.body };
+  if (req.file) {
+    Sauce.findOne({ _id: req.params.id })
+      .then((sauce) => {
+        if (sauce.userId != req.auth.userId) {
+          res.status(401).json({ message: "Non autorisé" });
+        } else {
+          const filename = sauce.imageUrl.split("/images/")[1];
+          fs.unlink(`./public/images/${filename}`, (error) => {
+            if (error) {
+              console.log(error);
+            }
+          });
+        }
+      })
+      .catch((error) => res.status(404).json({ message: "Sauce non trouvé" }));
+  }
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId != req.auth.userId) {
         res.status(401).json({ message: "Non-autorisé" });
       } else {
-        const filename = sauce.imageUrl.split("/images/")[1];
-        fs.unlink(`./public/images/${filename}`, () => {
-          const sauceObject = req.file
-            ? {
-                ...JSON.parse(req.body.sauce),
-                imageUrl: `${req.protocol}://${req.get("host")}/images/${
-                  req.file.filename
-                }`,
-              }
-            : { ...req.body };
-          Sauce.updateOne(
-            { _id: req.params.id },
-            { ...sauceObject, _id: req.params.id }
-          )
-            .then(() => res.status(200).json({ message: "Sauce modifié" }))
-            .catch((error) => {
-              console.log(error);
-              res.status(500).json({ error });
-            });
-        });
+        s;
+        Sauce.updateOne(
+          { _id: req.params.id },
+          { ...sauceObject, _id: req.params.id }
+        )
+          .then(() => res.status(200).json({ message: "Objet modifié " }))
+          .catch((error) => res.status(400).json({ error: error }));
       }
     })
-    .catch((error) => {
-      console.log(error);
-      res.status(400).json({ error });
-    });
+    .catch((error) => res.status(400).json({ error: error }));
 };
 
 // Suppression de la sauce
@@ -109,13 +117,13 @@ exports.deleteSauce = (req, res, next) => {
               res.status(200).json({ message: "Objet supprimé !" });
             })
             // 400 mauvaise requête
-            .catch((error) => res.status(400).json({ error }));
+            .catch((error) => res.status(400).json({ error: error }));
         });
       }
     })
     .catch((error) => {
       //400 Le serveur a rencontré une situation qu'il ne sait pas traiter
-      res.status(500).json({ error });
+      res.status(500).json({ error: error });
     });
 };
 exports.getOneSauce = (req, res, next) => {
